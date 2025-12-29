@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Wumpus World Game</title>
+  <style>
+    body {
+      background: #0f172a;
+      color: white;
+      font-family: Arial;
+      text-align: center;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 70px);
+      gap: 5px;
+      justify-content: center;
+      margin: 20px auto;
+    }
+    .cell {
+      width: 70px;
+      height: 70px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    .player { background: #22c55e; }
+    .controls button {
+      margin: 5px;
+      padding: 10px 15px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>🐉 Wumpus World</h1>
+<p id="status"></p>
+
+<div class="grid" id="grid"></div>
+
+<div class="controls">
+  <button onclick="move('U')">⬆️</button><br>
+  <button onclick="move('L')">⬅️</button>
+  <button onclick="move('R')">➡️</button><br>
+  <button onclick="move('D')">⬇️</button><br><br>
+  <button onclick="grabGold()">Grab Gold 💰</button>
+  <button onclick="shoot()">Shoot Arrow 🏹</button>
+</div>
+
+<script>
+const size = 4;
+let player = { x: 0, y: 0 };
+let arrow = true;
+let goldCollected = false;
+
+const wumpus = { x: 2, y: 2, alive: true };
+const pits = [{x:1,y:3},{x:3,y:0}];
+const gold = { x: 3, y: 3 };
+
+function draw() {
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      if (player.x === x && player.y === y) {
+        cell.classList.add("player");
+        cell.textContent = "🙂";
+      }
+      grid.appendChild(cell);
+    }
+  }
+  sense();
+}
+
+function sense() {
+  let msg = "";
+  if (adjacent(wumpus) && wumpus.alive) msg += "Stench 😷 ";
+  if (pits.some(p => adjacent(p))) msg += "Breeze 🌬️ ";
+  if (player.x === gold.x && player.y === gold.y && !goldCollected) msg += "Glitter ✨ ";
+  document.getElementById("status").textContent = msg || "All seems quiet...";
+}
+
+function adjacent(obj) {
+  return Math.abs(player.x - obj.x) + Math.abs(player.y - obj.y) === 1;
+}
+
+function move(dir) {
+  if (dir === 'U' && player.y > 0) player.y--;
+  if (dir === 'D' && player.y < 3) player.y++;
+  if (dir === 'L' && player.x > 0) player.x--;
+  if (dir === 'R' && player.x < 3) player.x++;
+  checkDeath();
+  draw();
+}
+
+function checkDeath() {
+  if (wumpus.alive && player.x === wumpus.x && player.y === wumpus.y) {
+    alert("💀 Eaten by Wumpus!");
+    location.reload();
+  }
+  if (pits.some(p => p.x === player.x && p.y === player.y)) {
+    alert("💀 Fell into a pit!");
+    location.reload();
+  }
+}
+
+function grabGold() {
+  if (player.x === gold.x && player.y === gold.y) {
+    goldCollected = true;
+    alert("🎉 Gold collected! Return to start!");
+  }
+  if (goldCollected && player.x === 0 && player.y === 0) {
+    alert("🏆 You won the game!");
+    location.reload();
+  }
+}
+
+function shoot() {
+  if (!arrow) return alert("No arrows left!");
+  arrow = false;
+  if (adjacent(wumpus)) {
+    wumpus.alive = false;
+    alert("🎯 Wumpus killed!");
+  } else {
+    alert("Missed shot!");
+  }
+}
+
+draw();
+</script>
+
+</body>
+</html>
